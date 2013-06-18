@@ -1,6 +1,5 @@
 var Ultic = {};
 
-
 function Board(canvas, width, height) {
 
     function line(startX, startY, endX, endY) {
@@ -38,10 +37,68 @@ function Board(canvas, width, height) {
 
 };
 
+function Game(canvas, width, height) {
+    var player = 1;
+
+    function posToGrid(x, y) {
+        return [x, y];
+    }
+
+    function moveX(pos) {
+        var size = width/6/3;
+        var x = pos[0] - size/2;
+        var y = pos[1] - size/2;
+        canvas.lineWidth = 2;
+        canvas.beginPath();  
+        canvas.moveTo(x, y);
+        canvas.lineTo(x + size, y + size);
+        canvas.moveTo(x + size, y);
+        canvas.lineTo(x, y + size);
+        canvas.stroke();
+        canvas.lineWidth = 1;
+    }
+
+    function moveY(pos) {
+        var size = width/10/3;
+        canvas.lineWidth = 2;
+        canvas.beginPath();
+        canvas.arc(pos[0], pos[1], size, 0, Math.PI*2, true); 
+        canvas.closePath();
+        canvas.stroke();
+        canvas.lineWidth = 1;
+    }
+
+    function drawMove(pos) {
+        if (player) {
+            moveX(pos);
+        } else {
+            moveY(pos);
+        }
+    }
+    var move = function(x, y) {
+        var pos = posToGrid(x, y);
+        drawMove(pos);
+        player = !player;
+    };
+    return {
+        move: move
+    };
+}
+
 $(function() {
+    var width = 720;
+    var height = width;
     Ultic.gameCanvas = document.getElementById('gamearea').getContext('2d');
     Ultic.boardCanvas = document.getElementById('board').getContext('2d');
 
-    var board = new Board(Ultic.boardCanvas, 720, 720);    
+    var board = new Board(Ultic.boardCanvas, width, height);   
+    var game = new Game(Ultic.gameCanvas, width, height);
     board.draw();
+
+    $('#gamearea').click(function(e) {
+        var x = e.offsetX;
+        var y = e.offsetY;
+
+        game.move(x, y);
+    })
 });
