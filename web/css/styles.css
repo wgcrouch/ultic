@@ -1,0 +1,19 @@
+#canvasCont {
+    position: absolute;
+}
+
+#board {
+    z-index: 100;
+    position:absolute;
+    left:0px;
+    top:0px;
+    border: 1px solid black;
+}
+
+#gamearea {
+    z-index: 200;
+    position:absolute;
+    left:0px;
+    top:0px;
+    border: 1px solid black;
+}
