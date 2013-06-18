@@ -1,5 +1,10 @@
 var Ultic = {};
 var padding = 20;
+var socket = io.connect(
+    //['http://', window.location.hostname, ':20000/'].join('')
+    "http://localhost:20000/"
+);
+
 function Board(canvas, width, height) {
 
     function line(startX, startY, endX, endY) {
@@ -114,7 +119,8 @@ function Game(canvas, width, height) {
     }
     var move = function(x, y) {
         var pos = posToGrid(x, y);
-
+        if (!pos) return;
+        socket.emit('move', {coord: coordToSimple(pos), player: player});
         drawMove(pos);
         player = !player;
     };
@@ -132,6 +138,8 @@ $(function() {
     var board = new Board(Ultic.boardCanvas, width, height);   
     var game = new Game(Ultic.gameCanvas, width, height);
     board.draw();
+
+    socket.on('connect', function () {});
 
     $('#gamearea').click(function(e) {
         var x = e.offsetX;
