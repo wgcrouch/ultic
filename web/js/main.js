@@ -40,21 +40,28 @@ function Board(canvas, width, height) {
 function Game(canvas, width, height) {
     var player = 1;
 
-    function posToGrid(x, y) {
+    function posToMainGrid(x, y) {
         var cellWidth = width/3;
         var cellHeight = height/3;
 
         var mainX = Math.floor(x/(cellWidth));
         var mainY = Math.floor(y/(cellHeight));
+        return [mainX, mainY];
+    }
+    function posToGrid(x, y) {
+        var cellWidth = width/3;
+        var cellHeight = height/3;
 
-        var relX = x - (mainX * cellWidth) - padding;
-        var relY = y - (mainY * cellHeight) - padding;
+        var main = posToMainGrid(x, y);
+
+        var relX = x - (main[0] * cellWidth) - padding;
+        var relY = y - (main[1] * cellHeight) - padding;
         if (relX < 0 || relY < 0 || relX > (cellWidth- padding*2) || relY > (cellHeight- padding*2)) {
             return false;
         }
         var subX = Math.floor(relX/((cellWidth-padding*2) /3));
         var subY = Math.floor(relY/((cellHeight-padding*2) / 3));
-        return [[mainX, mainY], [subX, subY]];
+        return [main, [subX, subY]];
     }
 
     function coordToSimple(pos) {
@@ -63,7 +70,17 @@ function Game(canvas, width, height) {
         return [main, sub];
     }
 
-    function moveX(pos) {
+    function gridToDraw(pos) {
+        var mainX = pos[0][0] * width/3;
+        var mainY = pos[0][1] * width/3;
+        var cellWidth = (width/3 - padding *2)/3;
+        var cellHeight = (height/3 - padding *2)/3;
+        var subX = mainX + pos[1][0] * cellWidth + cellWidth/2 + padding;
+        var subY = mainY + + pos[1][1] * cellHeight + cellHeight/2 + padding;
+        return [subX, subY];
+    }
+
+    function drawMoveX(pos) {
         var size = width/6/3;
         var x = pos[0] - size/2;
         var y = pos[1] - size/2;
@@ -77,7 +94,7 @@ function Game(canvas, width, height) {
         canvas.lineWidth = 1;
     }
 
-    function moveY(pos) {
+    function drawMoveY(pos) {
         var size = width/10/3;
         canvas.lineWidth = 2;
         canvas.beginPath();
@@ -88,10 +105,11 @@ function Game(canvas, width, height) {
     }
 
     function drawMove(pos) {
+        drawPos = gridToDraw(pos);
         if (player) {
-            moveX(pos);
+            drawMoveX(drawPos);
         } else {
-            moveY(pos);
+            drawMoveY(drawPos);
         }
     }
     var move = function(x, y) {
