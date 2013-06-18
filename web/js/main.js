@@ -1,5 +1,5 @@
 var Ultic = {};
-
+var padding = 20;
 function Board(canvas, width, height) {
 
     function line(startX, startY, endX, endY) {
@@ -22,7 +22,7 @@ function Board(canvas, width, height) {
 
     var draw = function() {
         drawGrid(0, 0, width, height);
-        var padding = 20;
+        
         var sWidth = width/3 - (padding*2);
         var sHeight = height/3 - (padding*2);
         for (var i=0; i<=8; i++) {   
@@ -41,7 +41,26 @@ function Game(canvas, width, height) {
     var player = 1;
 
     function posToGrid(x, y) {
-        return [x, y];
+        var cellWidth = width/3;
+        var cellHeight = height/3;
+
+        var mainX = Math.floor(x/(cellWidth));
+        var mainY = Math.floor(y/(cellHeight));
+
+        var relX = x - (mainX * cellWidth) - padding;
+        var relY = y - (mainY * cellHeight) - padding;
+        if (relX < 0 || relY < 0 || relX > (cellWidth- padding*2) || relY > (cellHeight- padding*2)) {
+            return false;
+        }
+        var subX = Math.floor(relX/((cellWidth-padding*2) /3));
+        var subY = Math.floor(relY/((cellHeight-padding*2) / 3));
+        return [[mainX, mainY], [subX, subY]];
+    }
+
+    function coordToSimple(pos) {
+        var main = pos[0][1] * 3 + pos[0][0];
+        var sub = pos[1][1] * 3 + pos[1][0];
+        return [main, sub];
     }
 
     function moveX(pos) {
@@ -77,6 +96,7 @@ function Game(canvas, width, height) {
     }
     var move = function(x, y) {
         var pos = posToGrid(x, y);
+
         drawMove(pos);
         player = !player;
     };
