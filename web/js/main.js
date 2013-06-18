@@ -101,17 +101,21 @@ function Board(canvas, width, height) {
     };
 
     function getCoordFromNum(num) {        
-        return [Math.floor(num/3), num % 3];
+        return [num % 3, Math.floor(num/3)];
     }
 
-    var draw = function() {
+    var draw = function(cell) {       
+        canvas.clearRect(0,0,width,height); 
         drawGrid(0, 0, width, height);
-        
         var sWidth = width/3 - (padding*2);
         var sHeight = height/3 - (padding*2);
-        for (var i=0; i<=8; i++) {   
+        for (var i=0; i<=8; i++) { 
+            if (i == cell) {
+                canvas.strokeStyle = 'red';
+            }
             var coords = getCoordFromNum(i);
             drawGrid(coords[0] * width/3 + padding, coords[1] * height/3 + padding, sWidth, sHeight);
+            canvas.strokeStyle = 'black';
         }
     };
 
@@ -121,10 +125,11 @@ function Board(canvas, width, height) {
 
 };
 
-function Game(canvas, width, height) {
+function Game(canvas, width, height, board) {
     var player = 1;
     var grid = new Grid();
     grid.createEmpty();
+    board.draw();
 
     function posToMainGrid(x, y) {
         var cellWidth = width/3;
@@ -209,6 +214,8 @@ function Game(canvas, width, height) {
         }
     }
 
+    var lastMove = null;
+
     var move = function(x, y) {
         var pos = posToGrid(x, y);
         if (!pos) return;
@@ -217,15 +224,17 @@ function Game(canvas, width, height) {
         var spot = grid.get(coord[0]).get(coord[1]);
         if (spot.result() != 'u')  return;
 
+        if (lastMove && coord[0] != lastMove[1]) { return}
+        lastMove = coord;        
+
         grid.get(coord[0]).set(coord[1], grid.blank(player ? 'x' : 'o'));
         var result = grid.get(coord[0]).result();
         drawMove(pos);
+        board.draw(coord[1]);
         if (result != 'u') {
             markWin(result, pos[0]);
         }
-        if (grid.result() != 'u') {
-            alert("We have a winner" + grid.result());
-        }
+
         player = !player;
     };
     return {
@@ -240,8 +249,7 @@ $(function() {
     Ultic.boardCanvas = document.getElementById('board').getContext('2d');
 
     var board = new Board(Ultic.boardCanvas, width, height);   
-    var game = new Game(Ultic.gameCanvas, width, height);
-    board.draw();
+    var game = new Game(Ultic.gameCanvas, width, height, board);
 
     $('#gamearea').click(function(e) {
         var x = e.offsetX;
