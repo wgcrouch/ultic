@@ -7,7 +7,6 @@
     position:absolute;
     left:0px;
     top:0px;
-    border: 1px solid black;
 }
 
 #gamearea {
@@ -15,5 +14,4 @@
     position:absolute;
     left:0px;
     top:0px;
-    border: 1px solid black;
 }
