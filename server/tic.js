@@ -18,8 +18,7 @@ io.sockets.on('connection', function(socket){
             player = grid.blank('x');
         }
         grid.get(data.coord[0]).set(data.coord[1], player);
-
-        console.log(grid.flatten());
+        
     });
 });
 

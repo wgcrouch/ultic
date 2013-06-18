@@ -1,9 +1,88 @@
 var Ultic = {};
 var padding = 20;
-var socket = io.connect(
-    //['http://', window.location.hostname, ':20000/'].join('')
-    "http://localhost:20000/"
-);
+
+var Grid = function() {
+    var blank = function(type) {
+        return {
+            result: function() {
+                return type;
+            }
+        };
+    };
+
+    var _grid = function(){
+        var subgrid = {};
+        for (var i = 0; i < 9; i++) {
+            subgrid[i] = blank('u');
+        };
+        return subgrid;
+    }();
+
+    var _result = 'u';
+
+    var winConditions = [7, 56, 73, 84, 146, 273, 292, 448];
+
+    var checkResult = function() {
+        var xMask = 0;
+        var oMask = 0;
+        for (var i = 0; i < 9; i ++) {
+            if (_grid[i] && _grid[i].result()) {
+                if (_grid[i].result() == 'x') {
+                    xMask |= Math.pow(2, i);
+                } else if(_grid[i].result() == 'o') {
+                    oMask |= Math.pow(2, i);
+                }
+            }
+        }
+        // Compare winning conditions
+        for (var i = winConditions.length - 1; i >= 0; i--) {
+            if ((xMask & winConditions[i]) === winConditions[i]) {
+                console.log('X wins');
+                return 'x';
+            }
+            if ((oMask & winConditions[i]) === winConditions[i]) {
+                console.log('O wins');
+                return 'o';
+            }
+        };
+        return 'u';
+    }
+    var grid = {
+        result: function() {
+            if (_result !== 'u') return _result;
+            _result = checkResult();
+            return _result;
+        },
+        set: function(grid, state) {
+            _grid[grid] = state;
+
+            // Workout winning conditions
+            
+        },
+        get: function(grid) {
+            return _grid[grid];
+        },
+        flatten: function() {
+            var grid = {};
+            for (var i = 0; i < 9; i++) {
+                var state = this.get(i);
+                if (state && typeof state == 'object') {
+                    grid[i] = state.flatten();
+                } else {
+                    grid[i] = state;
+                }
+            }
+            return grid;
+        },
+        createEmpty: function() {
+            for (var i = 0; i <= 9; i++) {
+                this.set(i, new Grid());
+            }
+        },
+        blank: blank
+    }
+    return grid;
+}
 
 function Board(canvas, width, height) {
 
@@ -44,6 +123,8 @@ function Board(canvas, width, height) {
 
 function Game(canvas, width, height) {
     var player = 1;
+    var grid = new Grid();
+    grid.createEmpty();
 
     function posToMainGrid(x, y) {
         var cellWidth = width/3;
@@ -85,11 +166,11 @@ function Game(canvas, width, height) {
         return [subX, subY];
     }
 
-    function drawMoveX(pos) {
-        var size = width/6/3;
+    function drawMoveX(pos, size) {
+        canvas.lineWidth = 2 * size || 1;
+        var size = width/6/3 * (size || 1);
         var x = pos[0] - size/2;
         var y = pos[1] - size/2;
-        canvas.lineWidth = 2;
         canvas.beginPath();  
         canvas.moveTo(x, y);
         canvas.lineTo(x + size, y + size);
@@ -99,9 +180,9 @@ function Game(canvas, width, height) {
         canvas.lineWidth = 1;
     }
 
-    function drawMoveY(pos) {
-        var size = width/10/3;
-        canvas.lineWidth = 2;
+    function drawMoveY(pos, size) {      
+        canvas.lineWidth = 2 * size || 1;  
+        var size = width/10/3 * (size || 1);        
         canvas.beginPath();
         canvas.arc(pos[0], pos[1], size, 0, Math.PI*2, true); 
         canvas.closePath();
@@ -117,11 +198,34 @@ function Game(canvas, width, height) {
             drawMoveY(drawPos);
         }
     }
+
+    function markWin(player, pos) {
+        var x = pos[0] * width/3 + width/3/2;
+        var y = pos[1] * height/3 + height/3/2;
+        if (player == 'x') {
+            drawMoveX([x,y],4);
+        } else {
+            drawMoveY([x,y],4);
+        }
+    }
+
     var move = function(x, y) {
         var pos = posToGrid(x, y);
         if (!pos) return;
-        socket.emit('move', {coord: coordToSimple(pos), player: player});
+
+        var coord = coordToSimple(pos);
+        var spot = grid.get(coord[0]).get(coord[1]);
+        if (spot.result() != 'u')  return;
+
+        grid.get(coord[0]).set(coord[1], grid.blank(player ? 'x' : 'o'));
+        var result = grid.get(coord[0]).result();
         drawMove(pos);
+        if (result != 'u') {
+            markWin(result, pos[0]);
+        }
+        if (grid.result() != 'u') {
+            alert("We have a winner" + grid.result());
+        }
         player = !player;
     };
     return {
@@ -138,8 +242,6 @@ $(function() {
     var board = new Board(Ultic.boardCanvas, width, height);   
     var game = new Game(Ultic.gameCanvas, width, height);
     board.draw();
-
-    socket.on('connect', function () {});
 
     $('#gamearea').click(function(e) {
         var x = e.offsetX;
