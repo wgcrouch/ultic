@@ -1,5 +1,4 @@
 var Ultic = {};
-var padding = 20;
 
 var Grid = function() {
     var blank = function(type) {
@@ -92,11 +91,12 @@ function Board(canvas, width, height) {
     }
 
     var drawGrid = function(x, y, width, height) {
-        canvas.beginPath();        
-        line(x + width/3, y, x + width/3, y + height);
-        line(x + width/3*2, y, x + width/3*2, y + height);
-        line(x, y + height/3, x + width, y + height/3);
-        line(x, y + height/3*2, x + width, y + height/3*2);
+        var padding = 15;
+        canvas.beginPath();  
+        line(x + width/3, y + padding, x + width/3, y + height - padding);
+        line(x + width/3*2, y + padding, x + width/3*2, y + height - padding);
+        line(x + padding, y + height/3, x + width - padding, y + height/3);
+        line(x + padding, y + height/3*2, x + width - padding, y + height/3*2);
         canvas.stroke();
     };
 
@@ -107,14 +107,14 @@ function Board(canvas, width, height) {
     var draw = function(cell) {       
         canvas.clearRect(0,0,width,height); 
         drawGrid(0, 0, width, height);
-        var sWidth = width/3 - (padding*2);
-        var sHeight = height/3 - (padding*2);
+        var sWidth = width/3;
+        var sHeight = height/3;
         for (var i=0; i<=8; i++) { 
             if (i == cell) {
                 canvas.strokeStyle = 'red';
             }
             var coords = getCoordFromNum(i);
-            drawGrid(coords[0] * width/3 + padding, coords[1] * height/3 + padding, sWidth, sHeight);
+            drawGrid(coords[0] * width/3, coords[1] * height/3, sWidth, sHeight);
             canvas.strokeStyle = 'black';
         }
     };
@@ -145,13 +145,13 @@ function Game(canvas, width, height, board) {
 
         var main = posToMainGrid(x, y);
 
-        var relX = x - (main[0] * cellWidth) - padding;
-        var relY = y - (main[1] * cellHeight) - padding;
-        if (relX < 0 || relY < 0 || relX > (cellWidth- padding*2) || relY > (cellHeight- padding*2)) {
+        var relX = x - (main[0] * cellWidth);
+        var relY = y - (main[1] * cellHeight);
+        if (relX < 0 || relY < 0 || relX > (cellWidth) || relY > (cellHeight)) {
             return false;
         }
-        var subX = Math.floor(relX/((cellWidth-padding*2) /3));
-        var subY = Math.floor(relY/((cellHeight-padding*2) / 3));
+        var subX = Math.floor(relX/((cellWidth) /3));
+        var subY = Math.floor(relY/((cellHeight) / 3));
         return [main, [subX, subY]];
     }
 
@@ -164,10 +164,10 @@ function Game(canvas, width, height, board) {
     function gridToDraw(pos) {
         var mainX = pos[0][0] * width/3;
         var mainY = pos[0][1] * width/3;
-        var cellWidth = (width/3 - padding *2)/3;
-        var cellHeight = (height/3 - padding *2)/3;
-        var subX = mainX + pos[1][0] * cellWidth + cellWidth/2 + padding;
-        var subY = mainY + + pos[1][1] * cellHeight + cellHeight/2 + padding;
+        var cellWidth = (width/3)/3;
+        var cellHeight = (height/3)/3;
+        var subX = mainX + pos[1][0] * cellWidth + cellWidth/2;
+        var subY = mainY + + pos[1][1] * cellHeight + cellHeight/2;
         return [subX, subY];
     }
 
